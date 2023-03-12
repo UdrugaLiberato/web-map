@@ -38,6 +38,6 @@ export const unclusteredPointLayer: LayerProps = {
   filter: ['!', ['has', 'point_count']],
   layout: {
     'icon-image': 'icon-marker',
-    'icon-size': 0.5,
+    'icon-size': 0.75,
   },
 };

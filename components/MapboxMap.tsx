@@ -9,9 +9,16 @@ import {
   unclusteredPointLayer,
 } from './layer-styles';
 
-export default function MapboxMap({ data, city }: { data: any; city: City }) {
+export default function MapboxMap({
+  data,
+  city,
+}: {
+  data: unknown;
+  city: City;
+}) {
   const mapRef = useRef<MapRef>(null);
 
+  console.log(city);
   const [popupInfo, setPopupInfo] = React.useState(null);
   const onClick = (event) => {
     if (!event.features[0]) return;
