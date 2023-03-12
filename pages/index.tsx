@@ -1,39 +1,50 @@
-import MobileVisitor from '@/components/MobileVisitor';
-import MobileDetect from 'mobile-detect';
-import { GetServerSidePropsContext } from 'next';
-import Map, { Marker } from 'react-map-gl';
+/* eslint-disable sonarjs/no-duplicate-string */
+import MapboxMap from '@/components/MapboxMap';
+import { City, ICategory, ILocation } from '@/types/map-types';
+import { baseApiUrl } from '@/utils/settings';
 
-const MAPBOX_TOKEN =
-  'pk.eyJ1IjoidWRydWdhLWxpYmVyYXRvIiwiYSI6ImNreHlqMHUwMTRwMXEyeHFrdG5sOWJ5Z3EifQ.258kxbeyO1QwlNidVFTRNA';
-
-export async function getServerSideProps(context: GetServerSidePropsContext) {
-  const md = new MobileDetect(context.req.headers['user-agent'] as string);
-
+export async function getStaticProps() {
+  const locations = await (await fetch(`${baseApiUrl}/locations`)).json();
+  const cities = await (await fetch(`${baseApiUrl}/cities`)).json();
+  const categories = await (await fetch(`${baseApiUrl}/categories`)).json();
   return {
     props: {
-      isMobile: Boolean(md.mobile()),
+      locations: locations['hydra:member'],
+      cities: cities['hydra:member'],
+      categories: categories['hydra:member'],
     },
+    revalidate: 120,
   };
 }
 
-export default function Home({ isMobile }: { isMobile: boolean }) {
-  if (isMobile) {
-    return <MobileVisitor />;
-  }
-  return (
-    <div>
-      <Map
-        initialViewState={{
-          latitude: 37.8,
-          longitude: -122.4,
-          zoom: 14,
-        }}
-        style={{ width: '100vw', height: '100vh' }}
-        mapStyle='mapbox://styles/mapbox/streets-v9'
-        mapboxAccessToken={MAPBOX_TOKEN}
-      >
-        <Marker longitude={-122.4} latitude={37.8} color='red' />
-      </Map>
-    </div>
-  );
+export default function index({
+  locations,
+  categories,
+  cities,
+}: {
+  locations: ILocation[];
+  categories: ICategory[];
+  cities: City[];
+}) {
+  const geoLocations = {
+    type: 'FeatureCollection',
+    features: locations.map((location) => ({
+      type: 'Feature',
+      geometry: {
+        type: 'Point',
+        coordinates: [location.longitude, location.latitude],
+      },
+      properties: {
+        id: location.id,
+        name: location.name,
+        street: location.street,
+        city: location.city,
+        phone: location.phone,
+        email: location.email,
+        about: location.about,
+        image: location.images,
+      },
+    })),
+  };
+  return <MapboxMap data={geoLocations} city={cities[0]} />;
 }
